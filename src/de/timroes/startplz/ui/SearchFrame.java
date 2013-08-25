@@ -97,6 +97,7 @@ public final class SearchFrame extends javax.swing.JFrame {
 	 * Creates new form SearchFrame
 	 */
 	public SearchFrame() {
+		setUndecorated(true);
 		initComponents();
 		
 		// Set custom scrollbar UI
@@ -190,6 +191,7 @@ public final class SearchFrame extends javax.swing.JFrame {
             }
         });
 
+        resultPanel.setBackground(java.awt.Color.white);
         resultPanel.setLayout(new java.awt.CardLayout());
 
         jLabel1.setBackground(java.awt.Color.white);
@@ -206,6 +208,7 @@ public final class SearchFrame extends javax.swing.JFrame {
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         jScrollPane1.setViewportBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
+        resultList.setBackground(java.awt.Color.white);
         resultList.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
         resultList.setModel(resultListModel);
         resultList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
