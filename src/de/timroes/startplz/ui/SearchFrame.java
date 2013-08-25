@@ -207,6 +207,7 @@ public final class SearchFrame extends javax.swing.JFrame {
         jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         jScrollPane1.setViewportBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        jScrollPane1.getViewport().setBackground(Color.white);
 
         resultList.setBackground(java.awt.Color.white);
         resultList.setBorder(BorderFactory.createEmptyBorder(0,0,0,0));
