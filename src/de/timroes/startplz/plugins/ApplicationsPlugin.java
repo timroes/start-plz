@@ -19,37 +19,40 @@ import de.timroes.startplz.Log;
 import de.timroes.startplz.Plugin;
 import de.timroes.startplz.Result;
 import de.timroes.startplz.plugins.util.IconThemeUtil;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import org.ini4j.Ini;
 
 /**
  * List applications installed on the computer, and let the user start them.
- * 
+ *
  * @author Tim Roes <mail@timroes.de>
  */
 public class ApplicationsPlugin extends Plugin {
 
 	private List<ApplicationInfo> info = new LinkedList<ApplicationInfo>();
 	private IconThemeUtil iconTheme = new IconThemeUtil();
-	
 	private final static String DESKTOP_SECTION = "Desktop Entry";
 	private final static String NAME_ENTRY = "Name";
 	private final static String CMD_ENTRY = "Exec";
 	private final static String COMMENT_ENTRY = "Comment";
 	private final static String ICON_ENTRY = "Icon";
 	private final static String TYPE_ENTRY = "Type";
-	
 	private final static String HOME = System.getProperty("user.home");
 	private final static String[] DESKTOP_FILE_PATHES = new String[] {
-		HOME + "/.local/share/applications/", 
+		HOME + "/.local/share/applications/",
 		"/usr/local/share/applications/",
 		"/usr/share/applications/"
 	};
-	
+
 	@Override
 	public synchronized void refresh() {
 		info.clear();
@@ -58,10 +61,10 @@ public class ApplicationsPlugin extends Plugin {
 			readFromDirectory(new File(dir));
 		}
 	}
-	
+
 	/**
 	 * Read all desktop files in a specific directory.
-	 * 
+	 *
 	 * @param dir The directory to scan for desktop files.
 	 */
 	private void readFromDirectory(File dir) {
@@ -69,7 +72,7 @@ public class ApplicationsPlugin extends Plugin {
 		if(!dir.exists() || !dir.isDirectory()) {
 			return;
 		}
-		
+
 		for(File f : dir.listFiles()) {
 			if(f.isDirectory()) {
 				readFromDirectory(f);
@@ -92,32 +95,32 @@ public class ApplicationsPlugin extends Plugin {
 			}
 		}
 	}
-	
+
 	@Override
 	public synchronized List<? extends Result> search(String query) {
-		
+
 		query = query.toLowerCase();
-		
+
 		List<ApplicationResult> result = new LinkedList<ApplicationResult>();
-		
+
 		for(ApplicationInfo i : info) {
 			if(i.name.toLowerCase().contains(query) 
 					|| i.cmd.toLowerCase().contains(query)
 					|| (i.comment != null && i.comment.toLowerCase().contains(query))) {
-				result.add(new ApplicationResult(i, 
+				result.add(new ApplicationResult(i,
 						getMaximumStringSimilarity(query, i.name, i.cmd, i.comment)));
 			}
 		}
-		
+
 		return result;
-		
+
 	}
-	
+
 	/**
 	 * Holds information about an application, read from a desktop file.
 	 */
 	private class ApplicationInfo {
-		
+
 		String name;
 		String cmd;
 		String comment;
@@ -146,7 +149,7 @@ public class ApplicationsPlugin extends Plugin {
 		public double getWeight() {
 			return weight;
 		}
-		
+
 		@Override
 		public String getTitle() {
 			return app.name;
@@ -159,7 +162,7 @@ public class ApplicationsPlugin extends Plugin {
 
 		@Override
 		public ImageIcon getIcon() {
-			if(app.icon != null && app.icon.exists()) {
+			if (app.icon != null && app.icon.exists()) {
 				return new ImageIcon(app.icon.getAbsolutePath());
 			} else {
 				return null;
@@ -168,13 +171,55 @@ public class ApplicationsPlugin extends Plugin {
 
 		@Override
 		public void execute() {
-			try {
-				Runtime.getRuntime().exec(app.cmd);
-			} catch (IOException ex) {
-				Log.w("Could not start application.", ex);
-			}
+			Thread procThread = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					try {
+						ProcessBuilder builder = new ProcessBuilder(app.cmd.split(" "));
+						builder.redirectErrorStream(true);
+						final Process proc = builder.start();
+						
+						// Read all output of the program and ignore it
+						// If we don't read the ouput the started process might hang, 
+						// because buffers are never emptied
+						Thread outputThread = new Thread(new Runnable() {
+
+							@Override
+							public void run() {
+								try {
+									InputStream stdout = proc.getInputStream();
+									BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
+									while(reader.readLine() != null) {
+										// ignore line here;
+									}
+								} catch (IOException ex) {
+									// Nothing we can do here
+								}
+							}
+							
+						}, "LogThread for " + app.name);
+						
+						outputThread.setDaemon(true);
+						outputThread.start();
+						
+						try {
+							proc.waitFor();
+						} catch (InterruptedException ex) {
+							// Ignore since we are just in a dirt hack to work
+							// around the buffer problem
+						}
+						
+					} catch (IOException ex) {
+						Log.w("Could not start application.", ex);
+					}
+				}
+				
+			}, "ProcThread for " + app.name);
+			
+			procThread.setDaemon(true);
+			procThread.start();
+
 		}
-		
 	}
-	
 }

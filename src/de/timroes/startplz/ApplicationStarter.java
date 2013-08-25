@@ -16,7 +16,6 @@
 package de.timroes.startplz;
 
 import de.timroes.startplz.ui.SearchFrame;
-import java.awt.geom.Ellipse2D;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -132,7 +131,7 @@ public class ApplicationStarter {
 					}
 				}
 			}
-		}).start();
+		}, "SingleInstanceServer").start();
 	}
     
 }
