@@ -97,6 +97,7 @@ public final class SearchFrame extends javax.swing.JFrame {
 	 * Creates new form SearchFrame
 	 */
 	public SearchFrame() {
+		setType(Type.POPUP);
 		setUndecorated(true);
 		initComponents();
 		

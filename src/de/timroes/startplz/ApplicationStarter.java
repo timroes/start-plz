@@ -16,6 +16,7 @@
 package de.timroes.startplz;
 
 import de.timroes.startplz.ui.SearchFrame;
+import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
